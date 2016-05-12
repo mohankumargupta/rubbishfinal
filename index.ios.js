@@ -9,7 +9,8 @@ import {
   AppRegistry,
   StyleSheet,
   Text,
-  View
+  View,
+  AppStateIOS
 } from 'react-native';
 var moment = require('moment');
 
@@ -65,6 +66,22 @@ function getBackgroundColor(gardening) {
 class rubbishfinal extends Component {
   constructor(props) {
      super(props);
+     this._handleAppStateChange(null);
+     
+  }
+
+  componentDidMount() {
+      AppStateIOS.addEventListener('change', this._handleAppStateChange);
+  }
+
+  componentWillUnmount() {
+      AppStateIOS.removeEventListener('change', this._handleAppStateChange);
+  }
+
+  _handleAppStateChange(currentAppState) {
+    if (currentAppState == 'background') {
+      return;
+    }
      weeknumber = calculateWeekNumber();
      weekday = calculateDayNumber();
      garden = recyclingornot(weeknumber,weekday);
@@ -75,7 +92,7 @@ class rubbishfinal extends Component {
       garden: garden,
       recyclingorgarden: result,
       backgroundcolor: getBackgroundColor(garden)
-     };
+      };    
   }
 
   render() {
@@ -105,6 +122,7 @@ var styles = StyleSheet.create({
     fontSize: 20,
     textAlign: 'center',
     margin: 10,
+    color:'white',
   },
   instructions: {
     textAlign: 'center',
