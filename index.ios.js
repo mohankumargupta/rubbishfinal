@@ -10,22 +10,27 @@ import {
   StyleSheet,
   Text,
   View,
-  AppStateIOS
+  AppStateIOS,
+  AsyncStorage
 } from 'react-native';
+
+import ActionButton from 'react-native-action-button';
+import Icon from 'react-native-vector-icons/Ionicons';
 var moment = require('moment');
+var flipState = 0;
 
 function calculateWeekNumber() {
-  weeknumber = moment().isoWeek();
+  var weeknumber = moment().isoWeek();
   return weeknumber;
 }
 
 function calculateDayNumber() {
-  daynumber =  moment().isoWeekday();
+  var daynumber =  moment().isoWeekday();
   return daynumber;
 }
 
 function recyclingornot(weeknumber, weekday) {
-  gardening = 0;
+  var gardening = 0;
 
   if ((weeknumber + 1)%2 == 0)  {
     if (weekday > 1) {
@@ -39,9 +44,8 @@ function recyclingornot(weeknumber, weekday) {
     }
   }
 
-
-
   
+  return gardening;
 }
 
 function finalVerdict(gardening) {
@@ -78,17 +82,49 @@ class rubbishfinal extends Component {
       AppStateIOS.removeEventListener('change', this._handleAppStateChange);
   }
 
+  flip() {
+    AsyncStorage.getItem("rubbishfinal_flip").then((obj) => {
+      var newflipstate;
+      if (flipState == 0) {
+        newflipstate = 1
+      }
+      else  {
+        flipState = 0;
+      }
+      if (obj == undefined) {
+        AsyncStorage.setItem("rubbishfinal_flip", {flip:flipState});
+      }
+
+      else {
+        if (obj.flip  == 0) {
+          newflipstate = 1;
+        }
+        else {
+          newflipstate = 0;
+        }
+        AsyncStorage.setItem("rubbishfinal_flip", {flip:flipState});
+      }
+
+    }).done();
+  }
+
   _handleAppStateChange(currentAppState) {
     if (currentAppState == 'background') {
       return;
     }
-     weeknumber = calculateWeekNumber();
-     weekday = calculateDayNumber();
-     garden = recyclingornot(weeknumber,weekday);
-     result = finalVerdict(garden);
+     var weeknumber = calculateWeekNumber();
+     var weekday = calculateDayNumber();
+     var garden = recyclingornot(weeknumber,weekday);
+     var result = finalVerdict(garden);
+
+     //console.log("weeknumber:"+ weeknumber);
+     //console.log("weekday:"+ weekday);
+     //console.log("garden:"+ garden);  
+     //console.log("result:" + result)
 
      this.state = {
       weeknumber: weeknumber,
+      day: weekday,
       garden: garden,
       recyclingorgarden: result,
       backgroundcolor: getBackgroundColor(garden)
@@ -103,8 +139,16 @@ class rubbishfinal extends Component {
           Week {this.state.weeknumber}
         </Text>
         <Text style={styles.welcome}>
+          Day {this.state.day}
+        </Text>
+        <Text style={styles.welcome}>
           {this.state.recyclingorgarden}
-        </Text>        
+        </Text>      
+        <ActionButton buttonColor="rgba(231,766,60,1)">
+          <ActionButton.Item buttonColor='#9b59b6' title="Flip" onPress={() => {this.flip();}}>
+            <Icon name="android-create" style={styles.actionButtonIcon} />
+          </ActionButton.Item>
+        </ActionButton>  
       </View>
     );
   }
@@ -129,6 +173,11 @@ var styles = StyleSheet.create({
     color: '#333333',
     marginBottom: 5,
   },
+  actionButtonIcon: {
+    fontSize:20,
+    height:22,
+    color:'white',
+  }
 });
 
 AppRegistry.registerComponent('rubbishfinal', () => rubbishfinal);
